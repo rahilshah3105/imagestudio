@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Trash2, FileImage, HelpCircle, ChevronLeft } from 'lucide-react';
 import type { ImageFile } from '../types';
 import { UploadZone } from './UploadZone';
+import { AdBanner } from './AdBanner';
 
 interface SidebarProps {
   files: ImageFile[];
@@ -170,6 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             })}
           </div>
         )}
+        <AdBanner type="banner320" />
       </div>
     </div>
   );

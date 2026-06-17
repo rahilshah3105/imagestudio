@@ -1,0 +1,3 @@
+# Allow all search engine crawlers to crawl and index the site
+User-agent: *
+Allow: /

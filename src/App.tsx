@@ -906,6 +906,25 @@ function App() {
         </div>
         
         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          {/* Smartlink Pro Features */}
+          <a 
+            href="https://www.effectivecpmnetwork.com/fkwr1d6jt?key=016d048bc11f59589fd9852063a40abf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn-primary"
+            style={{ 
+              padding: '0.4rem 0.8rem', 
+              fontSize: '0.8rem', 
+              textDecoration: 'none', 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: '0.25rem',
+              boxShadow: '0 0 10px var(--primary-glow)' 
+            }}
+          >
+            💎 Premium Tools
+          </a>
+
           {/* Light / Dark Mode Toggle */}
           <button
             className="btn-secondary"
@@ -1052,7 +1071,17 @@ function App() {
         <div className="footer-center">
           Made with &hearts; by Antigravity
         </div>
-        <div className="footer-right">
+        <div className="footer-right" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <a 
+            href="https://www.effectivecpmnetwork.com/fkwr1d6jt?key=016d048bc11f59589fd9852063a40abf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="footer-link-btn"
+            style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}
+          >
+            💎 Premium Upgrades
+          </a>
+          <span style={{ opacity: 0.3 }}>|</span>
           <button className="footer-link-btn" onClick={() => setShowPrivacyModal(true)}>
             Privacy Policy
           </button>

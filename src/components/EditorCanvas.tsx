@@ -3,6 +3,7 @@ import { useRef, useState, useEffect } from 'react';
 import { ZoomIn, ZoomOut, Maximize, Pipette, Crop, Eye, RefreshCw, Clipboard, Menu, Settings } from 'lucide-react';
 import type { ImageFile } from '../types';
 import { UploadZone } from './UploadZone';
+import { AdBanner } from './AdBanner';
 
 interface EditorCanvasProps {
   activeFile: ImageFile | null;
@@ -470,6 +471,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             </div>
             <h3 style={{ marginBottom: '1rem' }}>Central Image Operations</h3>
             <UploadZone onAddFiles={onAddFiles} compact={false} />
+            <AdBanner type="native" />
           </div>
         ) : (
           <div
@@ -592,6 +594,8 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
           </div>
         )}
       </div>
+
+      {activeFile && <AdBanner type="banner728" />}
 
       {/* Footer Info / Pixel Inspection details */}
       <div className="canvas-status-bar">

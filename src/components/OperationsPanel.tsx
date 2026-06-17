@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { ImageFile } from '../types';
 import { CustomDropdown } from './CustomDropdown';
+import { AdBanner } from './AdBanner';
 
 interface OperationsPanelProps {
   activeFile: ImageFile | null;
@@ -999,6 +1000,7 @@ export const OperationsPanel: React.FC<OperationsPanelProps> = ({
 
           </div>
         )}
+        <AdBanner type="banner300" />
       </div>
     </div>
   );
