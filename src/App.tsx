@@ -1069,7 +1069,7 @@ function App() {
           &copy; {new Date().getFullYear()} Centralized Image Studio. All rights reserved.
         </div>
         <div className="footer-center">
-          Made with &hearts; by Antigravity
+          Made with &hearts; in India
         </div>
         <div className="footer-right" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           <a 
