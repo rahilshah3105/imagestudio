@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { EditorCanvas } from './components/EditorCanvas';
 import { OperationsPanel } from './components/OperationsPanel';
@@ -348,9 +348,10 @@ function App() {
         URL.revokeObjectURL(f.currentUrl);
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleAddFiles = async (newFiles: FileList | File[]) => {
+  const handleAddFiles = useCallback(async (newFiles: FileList | File[]) => {
     const fileList = Array.from(newFiles).filter(f => f.type.startsWith('image/'));
     const loadedFiles: ImageFile[] = [];
 
@@ -366,6 +367,7 @@ function App() {
         originalSize: file.size,
         originalUrl,
         currentUrl: originalUrl,
+        currentBlob: file,
         width,
         height,
         type: file.type,
@@ -398,6 +400,38 @@ function App() {
         return next;
       });
     }
+  }, [activeFileIndex]);
+
+  // Global Clipboard Paste Event Listener
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      
+      const filesList: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) {
+            filesList.push(file);
+          }
+        }
+      }
+      
+      if (filesList.length > 0) {
+        handleAddFiles(filesList);
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [handleAddFiles]);
+
+  const handleRenameFile = (id: string, newName: string) => {
+    if (!newName.trim()) return;
+    setFiles(prev => prev.map(f => f.id === id ? { ...f, name: newName } : f));
   };
 
   const handleRemoveFile = (id: string) => {
@@ -467,6 +501,7 @@ function App() {
           return {
             ...updatedFile,
             currentUrl,
+            currentBlob: blob,
             size: blob.size,
             width,
             height,
@@ -597,6 +632,7 @@ function App() {
       setFiles(prev => prev.map((f, i) => i === activeFileIndex ? {
         ...f,
         currentUrl,
+        currentBlob: blob,
         size: blob.size,
         width,
         height,
@@ -644,6 +680,7 @@ function App() {
       setFiles(prev => prev.map((f, i) => i === activeFileIndex ? {
         ...f,
         currentUrl,
+        currentBlob: blob,
         size: blob.size,
         width,
         height,
@@ -742,6 +779,7 @@ function App() {
         file: newFile,
         originalUrl,
         currentUrl: originalUrl,
+        currentBlob: responseBlob,
         width,
         height,
         size: responseBlob.size,
@@ -983,6 +1021,7 @@ function App() {
           sidebarWidth={sidebarWidth}
           mobileOpen={mobileSidebarOpen}
           onCollapse={() => setSidebarWidth(0)}
+          onRenameFile={handleRenameFile}
         />
 
         {/* Sidebar Resizer handles bar (Only shown if not collapsed) */}

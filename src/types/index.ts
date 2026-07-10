@@ -6,6 +6,7 @@ export interface ImageFile {
   originalSize: number;
   originalUrl: string;
   currentUrl: string;
+  currentBlob?: Blob;
   width: number;
   height: number;
   type: string;

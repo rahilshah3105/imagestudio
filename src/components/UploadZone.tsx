@@ -47,7 +47,9 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onAddFiles, compact = fa
       >
         <Upload className="dropzone-icon" size={compact ? 22 : 44} />
         <div className="dropzone-text">
-          <h3 style={{ fontSize: compact ? '0.85rem' : '1.2rem', margin: 0 }}>Drag & drop images</h3>
+          <h3 style={{ fontSize: compact ? '0.85rem' : '1.2rem', margin: 0 }}>
+            {compact ? 'Drag or Paste images' : 'Drag & drop or paste images'}
+          </h3>
           <p style={{ fontSize: compact ? '0.7rem' : '0.9rem', margin: '4px 0 0 0' }}>PNG, JPG, WebP, BMP or GIF</p>
         </div>
         <input

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Trash2, FileImage, HelpCircle, ChevronLeft } from 'lucide-react';
+import { Trash2, FileImage, HelpCircle, ChevronLeft, Edit2, Download } from 'lucide-react';
 import type { ImageFile } from '../types';
 import { UploadZone } from './UploadZone';
 import { AdBanner } from './AdBanner';
@@ -16,6 +16,7 @@ interface SidebarProps {
   sidebarWidth: number;
   mobileOpen: boolean;
   onCollapse: () => void;
+  onRenameFile: (id: string, newName: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,7 +31,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   sidebarWidth,
   mobileOpen,
   onCollapse,
+  onRenameFile,
 }) => {
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [editName, setEditName] = React.useState('');
   const formatSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -125,19 +129,74 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                     {/* Right Column: Info & Actions */}
                     <div className="file-item-right">
-                      {/* Row 1: Filename & Delete */}
-                      <div className="file-item-row-top">
-                        <span className="file-name-text" title={img.name}>{img.name}</span>
-                        <button
-                          className="btn-remove-file"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRemoveFile(img.id);
-                          }}
-                          title="Remove file"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                      {/* Row 1: Filename & Actions */}
+                      <div className="file-item-row-top" onClick={(e) => { if (editingId === img.id) e.stopPropagation(); }}>
+                        {editingId === img.id ? (
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            onBlur={() => {
+                              if (editName.trim()) {
+                                onRenameFile(img.id, editName.trim());
+                              }
+                              setEditingId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                if (editName.trim()) {
+                                  onRenameFile(img.id, editName.trim());
+                                }
+                                setEditingId(null);
+                              } else if (e.key === 'Escape') {
+                                setEditingId(null);
+                              }
+                            }}
+                            className="rename-input"
+                            autoFocus
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <>
+                            <span className="file-name-text" title={img.name}>{img.name}</span>
+                            <div style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
+                              <button
+                                className="sidebar-action-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingId(img.id);
+                                  setEditName(img.name);
+                                }}
+                                title="Rename file"
+                              >
+                                <Edit2 size={12} />
+                              </button>
+                              <button
+                                className="sidebar-action-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const link = document.createElement('a');
+                                  link.href = img.currentUrl;
+                                  link.download = img.name;
+                                  link.click();
+                                }}
+                                title="Download file"
+                              >
+                                <Download size={12} />
+                              </button>
+                              <button
+                                className="sidebar-action-btn danger"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onRemoveFile(img.id);
+                                }}
+                                title="Remove file"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
 
                       {/* Row 2: Dimensions */}

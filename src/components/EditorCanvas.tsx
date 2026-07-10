@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useRef, useState, useEffect } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Pipette, Crop, Eye, RefreshCw, Clipboard, Menu, Settings } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, Pipette, Crop, Eye, RefreshCw, Clipboard, Menu, Settings, Copy } from 'lucide-react';
 import type { ImageFile } from '../types';
 import { UploadZone } from './UploadZone';
 import { AdBanner } from './AdBanner';
@@ -86,6 +86,52 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
       return () => clearTimeout(timer);
     }
   }, [toastMessage]);
+
+  const handleCopyImage = async () => {
+    if (!activeFile || !activeFile.currentBlob) {
+      setToastMessage("No active processed image to copy.");
+      return;
+    }
+
+    try {
+      let blobToCopy = activeFile.currentBlob;
+      
+      // ClipboardItem typically requires image/png format. If current format is not PNG, convert it.
+      if (activeFile.type !== 'image/png') {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = activeFile.currentUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const pngBlob = await new Promise<Blob | null>((resolve) => {
+            canvas.toBlob(resolve, 'image/png');
+          });
+          if (pngBlob) {
+            blobToCopy = pngBlob;
+          }
+        }
+      }
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'image/png': blobToCopy
+        })
+      ]);
+      setToastMessage("Image copied to clipboard!");
+    } catch (err) {
+      console.error('Failed to copy image:', err);
+      setToastMessage("Failed to copy image to clipboard.");
+    }
+  };
 
   // Initialize offscreen canvas for color picking
   const getOffscreenContext = (): CanvasRenderingContext2D | null => {
@@ -398,6 +444,16 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
             <Crop size={14} />
             Crop Box
           </button>
+
+          <button
+            className="toolbar-btn"
+            onClick={handleCopyImage}
+            disabled={!activeFile}
+            title="Copy Processed Image to Clipboard"
+          >
+            <Copy size={14} />
+            Copy Image
+          </button>
         </div>
 
         <div className="toolbar-group">
@@ -470,6 +526,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               <RefreshCw size={36} className="animate-spin" style={{ animationDuration: '6s' }} />
             </div>
             <h3 style={{ marginBottom: '1rem' }}>Central Image Operations</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>Paste (Ctrl+V) anywhere or use dropzone below to start</p>
             <UploadZone onAddFiles={onAddFiles} compact={false} />
             <AdBanner type="native" />
           </div>
@@ -481,9 +538,9 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               transition: isPanning ? 'none' : 'transform 0.15s ease-out',
             }}
           >
-            {showSplitView ? (
+            {showSplitView && (
               /* Before/After Split view mode */
-              <div className="split-viewer-container" style={{ width: `${imageRef.current?.clientWidth || 300}px`, height: `${imageRef.current?.clientHeight || 300}px` }}>
+              <div className="split-viewer-container">
                 {/* Left layer (Original) */}
                 <div className="split-image-layer">
                   <img src={activeFile.originalUrl} alt="Original Preview" />
@@ -510,30 +567,48 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
                   </div>
                 </div>
               </div>
-            ) : (
-              /* Standard render preview */
-              <img
-                ref={imageRef}
-                src={activeFile.currentUrl}
-                alt={activeFile.name}
-                className="workspace-image"
-                onLoad={() => {
-                  // Reset offscreen context when image changes
-                  canvasRef.current = null;
-                }}
-              />
             )}
 
+            {/* Standard render preview (Always in flow, hidden if split view is active) */}
+            <img
+              ref={imageRef}
+              src={activeFile.currentUrl}
+              alt={activeFile.name}
+              className="workspace-image"
+              style={showSplitView ? { opacity: 0, pointerEvents: 'none' } : undefined}
+              draggable={true}
+              onDragStart={(e) => {
+                if (activeFile.currentBlob) {
+                  try {
+                    const file = new File([activeFile.currentBlob], activeFile.name, { type: activeFile.type });
+                    e.dataTransfer.clearData();
+                    e.dataTransfer.items.add(file);
+                    
+                    // For Chromium-based desktop file drags
+                    const downloadUrl = `${activeFile.type}:${activeFile.name}:${activeFile.currentUrl}`;
+                    e.dataTransfer.setData("DownloadURL", downloadUrl);
+                    e.dataTransfer.setData("text/plain", activeFile.name);
+                  } catch (err) {
+                    console.error("Failed to populate dataTransfer:", err);
+                  }
+                }
+              }}
+              onLoad={() => {
+                // Reset offscreen context when image changes
+                canvasRef.current = null;
+              }}
+            />
+
             {/* Custom SVG/HTML Crop Box Overlay */}
-            {isCropMode && cropBox && imageRef.current && (
+            {isCropMode && cropBox && (
               <div
                 className="crop-overlay-container"
                 style={{
                   position: 'absolute',
                   top: 0,
                   left: 0,
-                  width: `${imageRef.current.clientWidth}px`,
-                  height: `${imageRef.current.clientHeight}px`,
+                  width: '100%',
+                  height: '100%',
                 }}
               >
                 <div
@@ -621,7 +696,7 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
 
             {!isPickingColor && (
               <div>
-                <span>Press Ctrl + Scroll to Zoom. Drag to Pan.</span>
+                <span>Press Ctrl + Scroll to Zoom. Drag to Pan. Drag image directly to export.</span>
               </div>
             )}
           </>
